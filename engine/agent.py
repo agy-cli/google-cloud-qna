@@ -154,7 +154,7 @@ PILLARS = {
 # ==========================================
 
 class ContextCacheManager:
-  """컨텍스트 캐싱(Context Caching)을 전역 싱글턴으로 안전하게 관리하는 클래스다."""
+  """컨텍스트 캐싱(Context Caching)을 전역 싱글턴으로 안전하게 관리하는 클래스다. 동기 및 비동기 캐시 상태를 공통 자원으로 싱글턴 공유한다."""
   _caches = {} # {cache_key: (cache_name, created_time)}
 
   @classmethod
@@ -222,13 +222,9 @@ class ContextCacheManager:
         temperature=temperature
       )
 
-class ContextCacheManagerAsync:
-  """컨텍스트 캐싱(Context Caching)을 전역 싱글턴으로 안전하게 관리하는 비동기 클래스다."""
-  _caches = {} # {cache_key: (cache_name, created_time)}
-
   @classmethod
-  async def get_cached_config(cls, genai_client, model_name: str, cache_key: str, system_instruction: str, temperature: float = 0.2):
-    """캐시된 컨텍스트 설정을 가져오며, 만료되었거나 없을 시 1시간 TTL로 자동 생성한다. (비동기 대응)"""
+  async def get_cached_config_async(cls, genai_client, model_name: str, cache_key: str, system_instruction: str, temperature: float = 0.2):
+    """캐시된 컨텍스트 설정을 가져오며, 만료되었거나 없을 시 1시간 TTL로 자동 생성한다. (비동기 대응, 전역 싱글턴 상태 완벽 공유)"""
     logger.info(f"Checking context cache validity (Async) for key: {cache_key} (Model: {model_name})")
     
     cache_name = None
@@ -721,7 +717,7 @@ async def run_orchestrator_sse_async(query: str):
   
   synthesized_report = ""
   try:
-    synth_config = await ContextCacheManagerAsync.get_cached_config(
+    synth_config = await ContextCacheManager.get_cached_config_async(
       genai_client=client,
       model_name=MODEL_AGENT,
       cache_key="SYNTHESIZER",
@@ -788,7 +784,7 @@ async def run_orchestrator_sse_async(query: str):
   
   evaluation_report = ""
   try:
-    eval_config = await ContextCacheManagerAsync.get_cached_config(
+    eval_config = await ContextCacheManager.get_cached_config_async(
       genai_client=client,
       model_name=MODEL_AGENT,
       cache_key="EVALUATOR",
@@ -827,7 +823,7 @@ async def run_orchestrator_sse_async(query: str):
   
   final_report = ""
   try:
-    remed_config = await ContextCacheManagerAsync.get_cached_config(
+    remed_config = await ContextCacheManager.get_cached_config_async(
       genai_client=client,
       model_name=MODEL_AGENT,
       cache_key="REMEDIATOR",

@@ -12,6 +12,8 @@ import asyncio
 import tempfile
 import urllib.parse
 import urllib.request
+import shutil
+import datetime as dt_lib
 from concurrent.futures import ThreadPoolExecutor
 import httpx
 import graphviz
@@ -19,6 +21,11 @@ from google.cloud import storage
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
+
+# 기동 시 dot 바이너리 설치 점검 (Suggestion 2)
+_has_dot_binary = shutil.which("dot") is not None
+if not _has_dot_binary:
+  logger.warning("[Warning] 'dot' executable not found in PATH. Graphviz compilation will degrade to error box representation.")
 
 
 def resolve_redirect_url(url: str) -> str:
@@ -291,6 +298,10 @@ def generate_and_upload_diagram(markdown_text: str) -> str:
   try:
     logger.info("Extracting and compiling Graphviz diagram to PNG...")
     
+    # Dot binary precheck (Suggestion 2)
+    if not _has_dot_binary:
+      raise RuntimeError("'dot' executable is not installed on this system. Please install graphviz package.")
+      
     # 1. UUID-based unique filename (removing hyphens as requested)
     uuid_str = str(uuid.uuid4()).replace("-", "")
     object_name = f"google-cloud-qna/architecture_{uuid_str}.png"
@@ -315,10 +326,21 @@ def generate_and_upload_diagram(markdown_text: str) -> str:
       blob = bucket.blob(object_name)
       blob.upload_from_filename(rendered_png, content_type="image/png")
       
-      public_url = f"https://storage.googleapis.com/{bucket_name}/{object_name}"
-      logger.info(f"Graphviz rendering and upload completed: {public_url}")
+      # 4. Generate GCS URL (Try signing first for enterprise security, fallback to public URL if local credentials don't support signing - Suggestion 4)
+      try:
+        # Attempt to sign the URL for 30 minutes
+        public_url = blob.generate_signed_url(
+          version="v4",
+          expiration=dt_lib.timedelta(minutes=30),
+          method="GET"
+        )
+        logger.info(f"Generated GCS Signed URL (30m expiry): {public_url}")
+      except Exception as ex:
+        # Fallback to public URL if credentials do not support local signing (e.g. ADC without private key)
+        public_url = f"https://storage.googleapis.com/{bucket_name}/{object_name}"
+        logger.info(f"Signed URL generation failed, falling back to public URL (Error: {ex}): {public_url}")
       
-      # 4. Replace with img tag
+      # 5. Replace with img tag
       img_tag = f'\n<img class="architecture-diagram" src="{public_url}" alt="Technical Advisory Diagram" style="max-width: 100%; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />\n'
       
       if text_after:
