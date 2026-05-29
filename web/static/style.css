@@ -24,7 +24,7 @@ body {
 
 .minimal-header h1 {
   font-family: 'Nanum Pen Script', cursive;
-  font-weight: normal;
+  font-weight: strong;
   color: #1a73e8;
   letter-spacing: -0.5px;
 }

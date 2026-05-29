@@ -52,12 +52,12 @@ google-cloud-qna/
 
 `~/.env` 파일 예시:
 ```env
-GCP_LOCATION="global"
 GCP_PROJECT="jiangjun0"
 GCP_REGION="us-central1"
 GCS_BUCKET="jiangjun0"
-MODEL_4_AGENT="gemini-3.5-flash"
-MODEL_4_SUBAGENTS="gemini-3.5-flash"
+MODEL_AGENT="gemini-3.5-flash"
+MODEL_LOCATION="global"
+MODEL_SUBAGENTS="gemini-3.5-flash"
 ```
 
 ### 2. 로컬 테스트 및 실행

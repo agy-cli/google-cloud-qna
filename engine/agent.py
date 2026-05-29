@@ -42,10 +42,10 @@ load_env_file()
 # Ensure default Google Cloud project configuration is set if missing from environment or .env
 if "GCP_PROJECT" not in os.environ:
   os.environ["GCP_PROJECT"] = "jiangjun0"
-if "GCP_LOCATION" not in os.environ:
-  os.environ["GCP_LOCATION"] = "global"
 if "GCP_REGION" not in os.environ:
   os.environ["GCP_REGION"] = "us-central1"
+if "MODEL_LOCATION" not in os.environ:
+  os.environ["MODEL_LOCATION"] = "global"
 
 import re
 import logging
@@ -81,8 +81,8 @@ _client_instance = None
 _sub_agents_instance = None
 
 # 통합 에이전트 및 하위 전문가 모델 명칭을 할당한다. (알파벳 순 정렬)
-MODEL_AGENT = os.environ.get("MODEL_4_AGENT") or "gemini-3.5-flash"
-MODEL_SUBAGENTS = os.environ.get("MODEL_4_SUBAGENTS") or "gemini-3.5-flash"
+MODEL_AGENT = os.environ.get("MODEL_AGENT") or "gemini-3.5-flash"
+MODEL_SUBAGENTS = os.environ.get("MODEL_SUBAGENTS") or "gemini-3.5-flash"
 
 # ==========================================
 # 1. 프롬프트 로딩 헬퍼 및 8대 솔루션 필라(Solution Pillars) 설정
@@ -314,7 +314,7 @@ def get_genai_client():
   global _client_instance
   if _client_instance is None:
     proj_id = os.environ.get("GCP_PROJECT") or "jiangjun0"
-    loc = os.environ.get("GCP_LOCATION") or "global"
+    loc = os.environ.get("MODEL_LOCATION") or "global"
     _client_instance = genai.Client(vertexai=True, project=proj_id, location=loc)
   return _client_instance
 

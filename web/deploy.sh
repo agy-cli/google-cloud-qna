@@ -22,7 +22,7 @@ fi
 
 PROJECT_ID="${GCP_PROJECT:-jiangjun0}"
 REGION="${GCP_REGION:-us-central1}"
-GCP_LOCATION_VAL="${GCP_LOCATION:-global}"
+MODEL_LOCATION_VAL="${MODEL_LOCATION:-global}"
 REPO_NAME="gcp-advisor"
 
 WEB_SERVICE_NAME="google-cloud-qna"
@@ -51,7 +51,7 @@ gcloud run deploy "${WEB_SERVICE_NAME}" \
   --region "${REGION}" \
   --allow-unauthenticated \
   --project="${PROJECT_ID}" \
-  --update-env-vars GCP_PROJECT="${PROJECT_ID}",GCP_LOCATION="${GCP_LOCATION_VAL}",GCP_REGION="${REGION}",GCS_BUCKET="${PROJECT_ID}",MODEL_4_AGENT="${MODEL_4_AGENT:-gemini-2.5-flash}",MODEL_4_SUBAGENTS="${MODEL_4_SUBAGENTS:-gemini-2.5-flash}"
+  --update-env-vars GCP_PROJECT="${PROJECT_ID}",GCP_REGION="${REGION}",GCS_BUCKET="${PROJECT_ID}",MODEL_AGENT="${MODEL_AGENT:-gemini-3.5-flash}",MODEL_LOCATION="${MODEL_LOCATION_VAL}",MODEL_SUBAGENTS="${MODEL_SUBAGENTS:-gemini-3.5-flash}"
 echo "==========================================="
 
 # 4. [Garbage Cleanup] 구형 가비지 리비전 청소
