@@ -225,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         synthesisAccumulatedText += data.text;
         renderMarkdown(synthesisText, synthesisAccumulatedText, false);
-        synthesisText.scrollTop = synthesisText.scrollHeight; // Auto-scroll
         break;
 
       case "evaluation_chunk":
