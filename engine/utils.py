@@ -317,7 +317,7 @@ def generate_and_upload_diagram(markdown_text: str) -> str:
       logger.info(f"Graphviz rendering and upload completed: {public_url}")
       
       # 4. Replace with img tag
-      img_tag = f'\n<img class="architecture-diagram" src="{public_url}" alt="Architecture Advisory Diagram" style="max-width: 100%; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />\n'
+      img_tag = f'\n<img class="architecture-diagram" src="{public_url}" alt="Technical Advisory Diagram" style="max-width: 100%; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />\n'
       
       if text_after:
         return text_before + "\n" + img_tag + "\n" + text_after
@@ -328,7 +328,7 @@ def generate_and_upload_diagram(markdown_text: str) -> str:
     logger.error(f"Failed to generate and upload Graphviz diagram: {e}")
     # 가령 오류가 발생하더라도 사용자 화면에 보기 흉한 원본 DOT 스크립트가 노출되는 것을 완전히 방지하기 위해,
     # 원본 스크립트는 삭제하고 정돈된 에러 안내 박스를 대신 렌더링하도록 확실히 보정합니다.
-    error_msg = f'\n<div class="diagram-error" style="padding: 15px; border: 1px solid #f5c6cb; border-radius: 8px; background-color: #f8d7da; color: #721c24; margin-top: 15px;">\n  <strong><i class="fa-solid fa-triangle-exclamation"></i> 아키텍처 다이어그램 생성 오류</strong><br/>\n  <span style="font-size: 12px; color: #666;">배포 또는 시스템 환경 설정 문제로 이미지를 컴파일하지 못했습니다. (원인: {str(e)})</span>\n</div>\n'
+    error_msg = f'\n<div class="diagram-error" style="padding: 15px; border: 1px solid #f5c6cb; border-radius: 8px; background-color: #f8d7da; color: #721c24; margin-top: 15px;">\n  <strong><i class="fa-solid fa-triangle-exclamation"></i> 시각화 다이어그램 생성 오류</strong><br/>\n  <span style="font-size: 12px; color: #666;">배포 또는 시스템 환경 설정 문제로 이미지를 컴파일하지 못했습니다. (원인: {str(e)})</span>\n</div>\n'
     if text_after:
       return text_before + "\n" + error_msg + "\n" + text_after
     else:

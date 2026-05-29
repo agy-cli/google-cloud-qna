@@ -143,9 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
     evaluationAccumulatedText = "";
     remediationAccumulatedText = "";
 
-    synthesisText.innerHTML = `<p class="placeholder-text"><i class="fa-solid fa-circle-notch fa-spin"></i> 아키텍처 합성 초안 생성을 대기하는 중입니다...</p>`;
+    synthesisText.innerHTML = `<p class="placeholder-text"><i class="fa-solid fa-circle-notch fa-spin"></i> 자문 권고안 초안 생성을 대기하는 중입니다...</p>`;
     evaluationText.innerHTML = `<p class="placeholder-text">사실 정합성 검증 피드백 대기 중입니다...</p>`;
-    finalReportContent.innerHTML = `<p class="placeholder-text">최종 아키텍처 자문 보고서 생성을 대기 중입니다...</p>`;
+    finalReportContent.innerHTML = `<p class="placeholder-text">최종 자문 보고서 생성을 대기 중입니다...</p>`;
     
     // Hide streaming badges initially
     document.getElementById("synthesis-streaming-badge").style.display = "none";

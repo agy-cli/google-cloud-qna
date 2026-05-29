@@ -11,8 +11,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 cd "${ROOT_DIR}"
 
-PROJECT_ID="jiangjun0"
-REGION="us-central1"
+# 로컬 .env 또는 ~/.env 파일이 존재하면 로드
+if [ -f .env ]; then
+  echo ".env 파일을 로드합니다."
+  export $(grep -v '^#' .env | xargs)
+elif [ -f ~/.env ]; then
+  echo "~/.env 파일을 로드합니다."
+  export $(grep -v '^#' ~/.env | xargs)
+fi
+
+PROJECT_ID="${GCP_PROJECT:-jiangjun0}"
+REGION="${GCP_REGION:-us-central1}"
+GCP_LOCATION_VAL="${GCP_LOCATION:-global}"
 REPO_NAME="gcp-advisor"
 
 WEB_SERVICE_NAME="google-cloud-qna"
@@ -41,7 +51,7 @@ gcloud run deploy "${WEB_SERVICE_NAME}" \
   --region "${REGION}" \
   --allow-unauthenticated \
   --project="${PROJECT_ID}" \
-  --update-env-vars GOOGLE_CLOUD_PROJECT="${PROJECT_ID}",GOOGLE_CLOUD_LOCATION="${REGION}",GCS_BUCKET="${PROJECT_ID}",MODEL_4_AGENT="gemini-2.5-flash",MODEL_4_SUBAGENTS="gemini-2.5-flash"
+  --update-env-vars GCP_PROJECT="${PROJECT_ID}",GCP_LOCATION="${GCP_LOCATION_VAL}",GCP_REGION="${REGION}",GCS_BUCKET="${PROJECT_ID}",MODEL_4_AGENT="${MODEL_4_AGENT:-gemini-2.5-flash}",MODEL_4_SUBAGENTS="${MODEL_4_SUBAGENTS:-gemini-2.5-flash}"
 echo "==========================================="
 
 # 4. [Garbage Cleanup] 구형 가비지 리비전 청소

@@ -1,6 +1,6 @@
-# Google Cloud Enterprise Architecture & Design Standards (v2.5)
+# Google Cloud Enterprise Tech & Design Standards (v3.5)
 
-본 문서는 구글 클라우드(Google Cloud) 환경에서 최적의 안정성, 고성능, 비용 효율성, 그리고 강력한 보안 통제 수준을 갖추기 위해 반드시 준수해야 하는 공식 아키텍처 엔터프라이즈 모범 사례 및 설계 표준 가이드라인이다.
+본 문서는 구글 클라우드(Google Cloud) 환경에서 최적의 안정성, 고성능, 비용 효율성, 그리고 강력한 보안 통제 수준을 갖추기 위해 반드시 준수해야 하는 공식 기술 엔터프라이즈 모범 사례 및 설계 표준 가이드라인이다.
 본 가이드라인은 멀티 에이전트 시스템의 마스터 의사결정 및 보고서 작성 시 기준 사양(Facts Grounding)으로 작동하며, 금융권 감사 및 기업 보안 요건을 충족하도록 통제 기준을 제공한다.
 
 ## 1. 컴퓨팅 설계 표준 (Compute & Serverless Standards)

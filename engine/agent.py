@@ -1,6 +1,6 @@
 """Google Cloud QnA Monolithic Agent Module.
 
-구글 클라우드 솔루션 아키텍처 자문을 위한 멀티 에이전트 협업 시스템이다.
+구글 클라우드 솔루션 기술 자문을 위한 멀티 에이전트 협업 시스템이다.
 사용자의 질문를 기반으로 8대 핵심 솔루션 필라 서브 에이전트로 병렬 라우팅하며, 
 각 서브 에이전트는 구글 검색 그라운딩(site:cloud.google.com 제약)을 수행하여 심도 깊은 정밀 의견을 도출한다.
 마지막 합성 단계를 통해 팩트 체크 및 조정을 마친 정렬된 보고서를 생성한다.
@@ -14,32 +14,38 @@ import os
 import sys
 
 def load_env_file():
-  """최상위 google-cloud-qna 루트에 있는 .env 파일을 찾아 os.environ에 안전하게 수동 적재한다."""
+  """최상위 google-cloud-qna 루트 및 홈 디렉터리에 있는 .env 파일을 찾아 os.environ에 안전하게 수동 적재한다."""
   current_dir = os.path.dirname(os.path.abspath(__file__))
   parent_dir = os.path.dirname(current_dir)
-  env_path = os.path.join(parent_dir, ".env")
-  if not os.path.exists(env_path):
-    env_path = os.path.join(current_dir, ".env")
-    
-  if os.path.exists(env_path):
-    with open(env_path, "r", encoding="utf-8") as f:
-      for line in f:
-        line = line.strip()
-        if not line or line.startswith("#"):
-          continue
-        if "=" in line:
-          key, val = line.split("=", 1)
-          key = key.strip()
-          val = val.strip().strip('"').strip("'")
-          os.environ[key] = val
+  
+  env_paths = [
+    os.path.expanduser("~/.env"),
+    os.path.join(parent_dir, ".env"),
+    os.path.join(current_dir, ".env")
+  ]
+  
+  for env_path in env_paths:
+    if os.path.exists(env_path):
+      with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+          line = line.strip()
+          if not line or line.startswith("#"):
+            continue
+          if "=" in line:
+            key, val = line.split("=", 1)
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            os.environ[key] = val
 
 load_env_file()
 
 # Ensure default Google Cloud project configuration is set if missing from environment or .env
-if "GOOGLE_CLOUD_PROJECT" not in os.environ:
-  os.environ["GOOGLE_CLOUD_PROJECT"] = "jiangjun0"
-if "GOOGLE_CLOUD_LOCATION" not in os.environ:
-  os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
+if "GCP_PROJECT" not in os.environ:
+  os.environ["GCP_PROJECT"] = "jiangjun0"
+if "GCP_LOCATION" not in os.environ:
+  os.environ["GCP_LOCATION"] = "global"
+if "GCP_REGION" not in os.environ:
+  os.environ["GCP_REGION"] = "us-central1"
 
 import re
 import logging
@@ -75,8 +81,8 @@ _client_instance = None
 _sub_agents_instance = None
 
 # 통합 에이전트 및 하위 전문가 모델 명칭을 할당한다. (알파벳 순 정렬)
-MODEL_AGENT = os.environ.get("MODEL_4_AGENT") or "gemini-2.5-flash"
-MODEL_SUBAGENTS = os.environ.get("MODEL_4_SUBAGENTS") or "gemini-2.5-flash"
+MODEL_AGENT = os.environ.get("MODEL_4_AGENT") or "gemini-3.5-flash"
+MODEL_SUBAGENTS = os.environ.get("MODEL_4_SUBAGENTS") or "gemini-3.5-flash"
 
 # ==========================================
 # 1. 프롬프트 로딩 헬퍼 및 8대 솔루션 필라(Solution Pillars) 설정
@@ -115,7 +121,7 @@ PILLARS = {
     "instruction": load_prompt_file("prompts/pillars/artificial_intelligence.md")
   },
   "Data_Analytics": {
-    "description": "BigQuery, Pub/Sub, Dataflow, Dataproc, Dataplex 및 고성능 데이터 파이프라인 분석 아키텍처 설계 전문가다.",
+    "description": "BigQuery, Pub/Sub, Dataflow, Dataproc, Dataplex 및 고성능 데이터 파이프라인 분석 솔루션 설계 전문가다.",
     "search_filters": ["cloud.google.com/bigquery", "cloud.google.com/pubsub", "cloud.google.com/dataflow", "cloud.google.com/dataproc"],
     "instruction": load_prompt_file("prompts/pillars/data_analytics.md")
   },
@@ -135,7 +141,7 @@ PILLARS = {
     "instruction": load_prompt_file("prompts/pillars/productivity_collaboration.md")
   },
   "Security": {
-    "description": "Cloud IAM 최소 권한 원칙, Cloud Identity, VPC Service Controls, Cloud Identity, Secret Manager, Cloud KMS 및 구글 클라우드 전반적인 보안 아키텍처 설계 전문가다.",
+    "description": "Cloud IAM 최소 권한 원칙, Cloud Identity, VPC Service Controls, Cloud Identity, Secret Manager, Cloud KMS 및 구글 클라우드 전반적인 보안 솔루션 설계 전문가다.",
     "search_filters": ["cloud.google.com/security", "cloud.google.com/iam", "cloud.google.com/vpc-service-controls"],
     "instruction": load_prompt_file("prompts/pillars/security.md")
   }
@@ -307,8 +313,8 @@ def get_genai_client():
   """Google Gen AI 클라이언트를 지연 초기화(Lazy Initialization)하여 싱글턴 인스턴스로 반환한다."""
   global _client_instance
   if _client_instance is None:
-    proj_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or "jiangjun0"
-    loc = os.environ.get("GOOGLE_CLOUD_LOCATION") or "us-central1"
+    proj_id = os.environ.get("GCP_PROJECT") or "jiangjun0"
+    loc = os.environ.get("GCP_LOCATION") or "global"
     _client_instance = genai.Client(vertexai=True, project=proj_id, location=loc)
   return _client_instance
 
@@ -450,12 +456,12 @@ def generate_technical_advisory(query: str, session_id: str = "default") -> str:
     compiled_advices.append(adv_text)
   
   # 4단계: 합성 모델 구동 (Streaming)
-  print_thinking("4단계: 종합 원안을 기반으로 아키텍처 보고서 초안 합성을 시작한다.")
+  print_thinking("4단계: 종합 원안을 기반으로 권고 보고서 초안 합성을 시작한다.")
   synthesis_payload = (
     f"User Inquiry: \"{query}\"\n\n"
     "Here are the detailed technical advices generated by our specialist sub-agents with official search grounding:\n\n"
     f"{''.join(compiled_advices)}\n"
-    "Please synthesize them into a single coherent 'Architecture Advisory Report' following the SYNTHESIZER_SYSTEM_PROMPT."
+    "Please synthesize them into a single coherent 'Technical Advisory Report' following the SYNTHESIZER_SYSTEM_PROMPT."
   )
   
   try:
