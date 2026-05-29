@@ -48,12 +48,16 @@ google-cloud-qna/
 ## 퀵 스타트
 
 ### 1. 사전 권한 확보 및 환경 변수 설정
-에이전트가 정상적으로 구글 검색 그라운딩 및 Gemini API를 호출할 수 있도록 아래 환경 변수를 셋팅하거나 권한을 확보한다.
+에이전트가 정상적으로 구글 검색 그라운딩 및 Gemini API를 호출할 수 있도록 아래와 같이 `~/.env` 파일을 작성하여 환경 변수를 셋팅한다.
 
-~/.env
-- `GOOGLE_CLOUD_LOCATION`: 가동할 리전 (예: `us-central1`)
-- `GOOGLE_CLOUD_PROJECT`: 타겟 GCP 프로젝트 ID
-- `GOOGLE_CLOUD_STORAGE`: 다이어그램이 저장되는 GCS 버킷
+`~/.env` 파일 예시:
+```env
+GOOGLE_CLOUD_PROJECT="jiangjun0"
+GOOGLE_CLOUD_LOCATION="us-central1"
+GCS_BUCKET="jiangjun0"
+MODEL_4_AGENT="gemini-2.5-flash"
+MODEL_4_SUBAGENTS="gemini-2.5-flash"
+```
 
 ### 2. 로컬 테스트 및 실행
 단일 컨테이너 아키텍처로 통합되어 로컬 테스트도 간단하다.
@@ -73,4 +77,4 @@ uvicorn web.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 배포가 끝나면 터미널 창에 반환되는 통합 포털 URL 주소로 즉시 접속하여 사용한다.  
-- 배포 포털 실주소: [https://google-cloud-qna-gb3apzhmla-uc.a.run.app](https://google-cloud-qna-gb3apzhmla-uc.a.run.app)
+- 배포 주소 예시: [https://google-cloud-qna-gb3apzhmla-uc.a.run.app](https://google-cloud-qna-gb3apzhmla-uc.a.run.app)

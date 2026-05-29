@@ -41,7 +41,7 @@ gcloud run deploy "${WEB_SERVICE_NAME}" \
   --region "${REGION}" \
   --allow-unauthenticated \
   --project="${PROJECT_ID}" \
-  --update-env-vars GOOGLE_CLOUD_PROJECT="${PROJECT_ID}",GOOGLE_CLOUD_LOCATION="${REGION}",GCS_BUCKET="${PROJECT_ID}"
+  --update-env-vars GOOGLE_CLOUD_PROJECT="${PROJECT_ID}",GOOGLE_CLOUD_LOCATION="${REGION}",GCS_BUCKET="${PROJECT_ID}",MODEL_4_AGENT="gemini-2.5-flash",MODEL_4_SUBAGENTS="gemini-2.5-flash"
 echo "==========================================="
 
 # 4. [Garbage Cleanup] 구형 가비지 리비전 청소
