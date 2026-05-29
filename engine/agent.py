@@ -47,6 +47,7 @@ import subprocess
 import asyncio
 import json
 import urllib.parse
+import httpx
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from google import genai
@@ -391,6 +392,8 @@ class SubAgentConfig:
 EVALUATOR_SYSTEM_PROMPT = """당신은 구글 클라우드(Google Cloud) 공식 사양과 기술 문서에 기반하여 기술 아키텍처 보고서의 사실 무결성을 검증하는 전문 기술 평가자(Factual Evaluator)다.
 당신의 유일한 임무는 합성된 아키텍처 보고서 초안의 내용이 실제 구글 클라우드의 공식 기술 사실(Facts)과 부합하는지 엄격히 대조하고 체크하는 것이다.
 
+특히, 제공된 '[물리적 URL 검증 결과 (HTTP Status Check)]' 섹션에서 "!!! 발견된 오류/깨진 링크 !!!"로 분류된 404 Not Found 또는 통신 불가 URL은 실제 물리적으로 존재하지 않는 명백한 에러 링크다. 이 깨진 링크들을 팩트 체크 보고서에서 무조건 심각한 기술 사실 왜곡 오류(Factual Error)로 지적하고, 다음 정정 단계(Remediation)에서 이 링크들을 보고서 본문에서 완전히 영구 제거하거나 유효한 대체 링크로 교체하도록 반드시 구체적으로 명령해야 한다.
+
 --- 사실성 검증 규칙 및 작성 형식 (반드시 준수) ---
 1. 모든 설명은 경어가 없는 단호한 전문 한국어 문어체(-다) 형식만을 철저히 유지하십시오.
 2. 각 문단은 반드시 시작 부분에 대괄호 없이 마크다운의 굵은 글씨(**머리말**:) 형식으로 노출한 후, 줄바꿈 없이 곧바로 기술 서술을 이어가십시오.
@@ -401,7 +404,7 @@ EVALUATOR_SYSTEM_PROMPT = """당신은 구글 클라우드(Google Cloud) 공식 
 * https://cloud.google.com/url1
 * https://cloud.google.com/url2
 4. 문단과 문단 사이는 반드시 빈 줄 한 개를 넣어서 확연하게 구분해 주십시오.
-5. 전체 답변 분량은 공백을 포함한 한글 300~400자 내외(최대 3개 문단 이내)로 콤팩트하게 작성하십시오. 만일 모든 내용이 완전히 사실에 부합한다면, "**검증 완료**: 모든 기술 사양과 주소가 구글 공식 문서의 팩트와 완벽히 부합하므로 지적 사항이 없다.\n* https://cloud.google.com" 한 문단만 출력하십시오.
+5. 전체 답변 분량은 공백을 포함한 한글 300~400자 내외(최대 3개 문단 이내)로 콤팩트하게 작성하십시오. 만일 모든 내용이 완전히 사실에 부합하고, 404 깨진 링크도 일절 발견되지 않았다면, "**검증 완료**: 모든 기술 사양과 주소가 구글 공식 문서의 팩트와 완벽히 부합하므로 지적 사항이 없다.\n* https://cloud.google.com" 한 문단만 출력하십시오.
 """
 
 GCP_ARCH_STANDARDS = """# Google Cloud Enterprise Architecture & Design Standards (v2.5)
@@ -466,6 +469,8 @@ GCP_ARCH_STANDARDS = """# Google Cloud Enterprise Architecture & Design Standard
 
 REMEDIATOR_SYSTEM_PROMPT = """당신은 사실성 평가 보고서(Fact-check Report)를 바탕으로 기술 자문 보고서의 모든 사실 왜곡이나 설정 오류를 교정하고 완성하는 전문 보정자(Factual Remediator)다.
 당신의 임무는 사실에 부합하지 않는 항목으로 지적된 부분을 구글 클라우드 공식 오피셜 사양 및 정보에 일치하도록 정확하게 정정하여 완벽하게 보정된 최종 '기술 아키텍처 권고 보고서'를 재합성하는 것이다.
+
+특히, 사실성 평가 보고서(Fact-check Report)나 물리적 URL 검증 결과에서 404 Not Found 또는 통신 불가로 지적된 모든 부러진 링크(Broken URLs)는 절대 최종 권고 보고서에 그대로 포함되어서는 안 된다. 해당 링크들을 보고서에서 완전히 제거하거나, 구글 클라우드 공식 기술 문서의 실제 유효한 URL로 완벽하게 교체해야 한다. 404 Not Found 링크가 최종 보고서에 남아있을 경우 당신의 아키텍처 신뢰성은 무너지므로 이 교정 임무를 극도로 꼼꼼하고 완벽하게 수행하십시오.
 
 --- 최종 권고 보고서 작성 규칙 (반드시 준수) ---
 1. 모든 기술 용어와 제품명은 구글 클라우드 공식 명칭을 완벽히 지켜 서술하십시오.
@@ -600,6 +605,113 @@ def resolve_all_urls_in_text(text: str) -> str:
     text = text.replace(orig, resolved)
     
   return text
+
+
+def extract_urls_from_text(text: str) -> list[str]:
+  """텍스트에서 유효한 형태의 URL을 추출합니다."""
+  if not text:
+    return []
+  # 마크다운 괄호, 따옴표, 괄호 닫기, 쉼표, 마침표 등이 뒤에 붙은 것을 고려해 clean하게 URL만 추출
+  url_pattern = re.compile(r'(https?://[^\s"\'()\]>]+)')
+  urls = url_pattern.findall(text)
+  
+  cleaned_urls = []
+  for url in urls:
+    clean_url = url
+    while clean_url and clean_url[-1] in ".,;:!?":
+      clean_url = clean_url[:-1]
+    if clean_url:
+      cleaned_urls.append(clean_url)
+      
+  return sorted(list(set(cleaned_urls)))
+
+
+async def verify_url_async(url: str, client: httpx.AsyncClient) -> tuple[str, bool, int, str]:
+  """URL의 존재 여부를 비동기적으로 검증합니다."""
+  try:
+    headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+    }
+    # 구글 문서 서버는 HEAD 요청 시 종종 405/403을 주므로 바로 GET으로 검증합니다.
+    # 단, 빠른 진행을 위해 타임아웃을 3초로 잡습니다.
+    response = await client.get(url, headers=headers, follow_redirects=True, timeout=3.0)
+    if response.status_code == 404:
+      return url, False, 404, "404 Not Found"
+    elif response.status_code >= 400:
+      return url, False, response.status_code, f"HTTP Error {response.status_code}"
+    return url, True, response.status_code, "OK"
+  except httpx.HTTPStatusError as e:
+    return url, False, e.response.status_code if e.response else 0, f"HTTP Status Error: {e}"
+  except httpx.RequestError as e:
+    return url, False, 0, f"Request Error: {e}"
+  except Exception as e:
+    return url, False, 0, f"Unexpected Error: {e}"
+
+
+async def verify_urls_async(urls: list[str]) -> dict[str, dict]:
+  """여러 개의 URL을 비동기 병렬로 신속하게 검증합니다."""
+  results = {}
+  if not urls:
+    return results
+  
+  limits = httpx.Limits(max_keepalive_connections=10, max_connections=20)
+  async with httpx.AsyncClient(limits=limits) as client:
+    tasks = [verify_url_async(url, client) for url in urls]
+    completed = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    for res in completed:
+      if isinstance(res, Exception):
+        continue
+      url, is_valid, status, err_msg = res
+      results[url] = {
+        "is_valid": is_valid,
+        "status_code": status,
+        "error_message": err_msg
+      }
+  return results
+
+
+def verify_url_sync(url: str, client: httpx.Client) -> tuple[str, bool, int, str]:
+  """URL의 존재 여부를 동기적으로 검증합니다."""
+  try:
+    headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+    }
+    response = client.get(url, headers=headers, follow_redirects=True, timeout=3.0)
+    if response.status_code == 404:
+      return url, False, 404, "404 Not Found"
+    elif response.status_code >= 400:
+      return url, False, response.status_code, f"HTTP Error {response.status_code}"
+    return url, True, response.status_code, "OK"
+  except httpx.HTTPStatusError as e:
+    return url, False, e.response.status_code if e.response else 0, f"HTTP Status Error: {e}"
+  except httpx.RequestError as e:
+    return url, False, 0, f"Request Error: {e}"
+  except Exception as e:
+    return url, False, 0, f"Unexpected Error: {e}"
+
+
+def verify_urls_sync(urls: list[str]) -> dict[str, dict]:
+  """여러 개의 URL을 동기식 스레드풀로 신속하게 검증합니다."""
+  results = {}
+  if not urls:
+    return results
+  
+  with httpx.Client() as client:
+    with ThreadPoolExecutor(max_workers=min(len(urls), 20)) as executor:
+      futures = [executor.submit(verify_url_sync, url, client) for url in urls]
+      for future in futures:
+        try:
+          res = future.result()
+          url, is_valid, status, err_msg = res
+          results[url] = {
+            "is_valid": is_valid,
+            "status_code": status,
+            "error_message": err_msg
+          }
+        except Exception:
+          pass
+  return results
 
 
 def extract_dot_code(markdown_text: str) -> str:
@@ -894,11 +1006,40 @@ def generate_technical_advisory(query: str, session_id: str = "default") -> str:
     logger.error(f"Synthesis model generation failed: {e}")
     return f"### 에러 발생\n종합 권고문 생성 중 에러가 발생했습니다: {str(e)}"
   
-  # 5단계: 사실성 평가 모델 구동
-  print_thinking("5단계: 구글 클라우드 공식 사양을 기반으로 한 보고서 초안의 사실성 평가를 진행한다.")
+  # 5단계: 사실성 평가 및 URL 실체 검증 모델 구동
+  print_thinking("5단계: 구글 클라우드 공식 사양을 기반으로 한 보고서 초안의 사실성 평가 및 URL 실체성 검증을 진행한다.")
+  
+  # 먼저 초안 내의 모든 리다이렉트 URL을 깔끔히 변환합니다.
+  resolved_synthesized_report = resolve_all_urls_in_text(synthesized_report)
+  extracted_urls = extract_urls_from_text(resolved_synthesized_report)
+  
+  print_thinking(f"초안 내에서 총 {len(extracted_urls)}개의 URL을 발견했습니다. 실제 서버와 통신해 404 에러 링크가 있는지 검사합니다...")
+  url_validation_results = verify_urls_sync(extracted_urls)
+  
+  broken_urls_report = []
+  valid_urls_report = []
+  for url, res in url_validation_results.items():
+    if not res["is_valid"]:
+      broken_urls_report.append(f"- {url}: {res['error_message']} (지적 대상 - 최종 권고안에서 제거 또는 대체 필수)")
+    else:
+      valid_urls_report.append(f"- {url}: 존재함 ({res['status_code']} OK)")
+      
+  url_check_summary = "[물리적 URL 검증 결과 (HTTP Status Check)]\n"
+  if broken_urls_report:
+    url_check_summary += "!!! 발견된 오류/깨진 링크 (404 Not Found 또는 통신 불가) !!!\n" + "\n".join(broken_urls_report) + "\n"
+  else:
+    url_check_summary += "모든 URL의 물리적 연결이 정상인 것으로 확인되었습니다.\n"
+    
+  if valid_urls_report:
+    url_check_summary += "\n[정상 링크 목록]\n" + "\n".join(valid_urls_report) + "\n"
+
   evaluation_payload = (
-    f"Synthesized Report Draft:\n\n{synthesized_report}\n\n"
+    f"Synthesized Report Draft:\n\n{resolved_synthesized_report}\n\n"
+    f"{url_check_summary}\n\n"
     "Please review the above draft report and evaluate whether its contents are factually correct. "
+    "CRITICAL REQUIREMENT: If there are any broken/404 URLs listed in the '[물리적 URL 검증 결과]' section above, "
+    "you MUST explicitly list them as errors and demand their complete deletion or replacement in the Fact-check Report. "
+    "Ensure no broken URLs can survive the next remediation step. "
     "Check all product names, features, integration specifications, and markdown links/URLs against official specifications. "
     "Generate a precise 'Fact-check Report' identifying any non-factual or inaccurate elements."
   )
@@ -1123,12 +1264,40 @@ async def run_orchestrator_sse_async(query: str):
   yield {"event": "phase_change", "phase": "synthesis", "status": "completed"}
   
   # --- 4단계: 사실 무결성 검증 (Factual Evaluator) (Stream) ---
-  yield {"event": "status", "message": "4단계: 구글 클라우드 최신 공식 사양과 대조하여 사실 무결성 검증(Fact-checking)을 시작합니다..."}
+  yield {"event": "status", "message": "4단계: 구글 클라우드 최신 공식 사양과 대조하여 사실 무결성 검증(Fact-checking) 및 실시간 URL 존재 여부 확인(404 에러 검사)을 시작합니다..."}
   yield {"event": "phase_change", "phase": "evaluation", "status": "active"}
   
+  # 먼저 초안 내의 모든 리다이렉트 URL을 깔끔히 변환합니다.
+  resolved_synthesized_report = resolve_all_urls_in_text(synthesized_report)
+  extracted_urls = extract_urls_from_text(resolved_synthesized_report)
+  
+  # 비동기 병렬로 매우 신속하게 URL의 HTTP 상태를 확인합니다.
+  url_validation_results = await verify_urls_async(extracted_urls)
+  
+  broken_urls_report = []
+  valid_urls_report = []
+  for url, res in url_validation_results.items():
+    if not res["is_valid"]:
+      broken_urls_report.append(f"- {url}: {res['error_message']} (지적 대상 - 최종 권고안에서 제거 또는 대체 필수)")
+    else:
+      valid_urls_report.append(f"- {url}: 존재함 ({res['status_code']} OK)")
+      
+  url_check_summary = "[물리적 URL 검증 결과 (HTTP Status Check)]\n"
+  if broken_urls_report:
+    url_check_summary += "!!! 발견된 오류/깨진 링크 (404 Not Found 또는 통신 불가) !!!\n" + "\n".join(broken_urls_report) + "\n"
+  else:
+    url_check_summary += "모든 URL의 물리적 연결이 정상인 것으로 확인되었습니다.\n"
+    
+  if valid_urls_report:
+    url_check_summary += "\n[정상 링크 목록]\n" + "\n".join(valid_urls_report) + "\n"
+
   evaluation_payload = (
-    f"Synthesized Report Draft:\n\n{synthesized_report}\n\n"
+    f"Synthesized Report Draft:\n\n{resolved_synthesized_report}\n\n"
+    f"{url_check_summary}\n\n"
     "Please review the above draft report and evaluate whether its contents are factually correct. "
+    "CRITICAL REQUIREMENT: If there are any broken/404 URLs listed in the '[물리적 URL 검증 결과]' section above, "
+    "you MUST explicitly list them as errors and demand their complete deletion or replacement in the Fact-check Report. "
+    "Ensure no broken URLs can survive the next remediation step. "
     "Check all product names, features, integration specifications, and markdown links/URLs against official specifications. "
     "Generate a precise 'Fact-check Report' identifying any non-factual or inaccurate elements."
   )
