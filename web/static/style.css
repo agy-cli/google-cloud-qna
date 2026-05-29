@@ -1,0 +1,451 @@
+/* ==========================================
+   Google Cloud QnA: Premium Borderless Stylesheet
+   Theme: Elegant Borderless Design with Beautiful Korean Cursive Titles
+   ========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Outfit:wght@300;400;600;800&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #fafbfc; /* Modern sleek off-white */
+  color: #1c1e21;
+  line-height: 1.6;
+  padding: 24px;
+}
+
+/* Minimal Header */
+.minimal-header {
+  background: transparent;
+}
+
+.minimal-header h1 {
+  font-family: 'Nanum Pen Script', cursive;
+  font-weight: normal;
+  color: #1a73e8;
+  letter-spacing: -0.5px;
+}
+
+.system-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  background-color: #e6f4ea;
+  color: #137333;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #137333;
+  border-radius: 50%;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(19, 115, 51, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(19, 115, 51, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(19, 115, 51, 0); }
+}
+
+/* Main Table Layout (Strict Column Widths, Borderless) */
+.layout-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 20px; /* Generous padding-gap between cards to avoid borders entirely */
+  table-layout: fixed; /* Crucial for strict 1/3 column sizes */
+  border: none !important;
+}
+
+.layout-table td {
+  border: none !important; /* No outer lines or outlines */
+  vertical-align: top;
+}
+
+/* The card container cell */
+.cell {
+  padding: 24px;
+  background-color: #ffffff; /* pure white cards resting on off-white body */
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); /* Ultra-soft premium depth */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Cell Internal Structures */
+.cell-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: none !important; /* No inner line border */
+}
+
+.cell-title {
+  font-family: 'Nanum Pen Script', cursive !important;
+  font-weight: normal !important;
+  color: #1a73e8; /* Accent color to guide focus */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cell-title i {
+  color: #4285f4;
+}
+
+.cell-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Scrollable containers inside cells (Hidden by default, shown on hover) */
+.scrollable {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: hidden;
+  padding-right: 4px;
+}
+
+/* Enable scrolling and reveal scrollbars only when hovering over the parent cell */
+.cell:hover .scrollable {
+  overflow-y: auto;
+}
+
+/* Row 1 matching heights */
+.topology-cell {
+  height: 100%;
+}
+.topology-cell .cell {
+  height: 100%;
+}
+
+/* Prompt Card 1:1 Aspect Ratio */
+.prompt-cell .cell {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.prompt-cell .cell-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#query-input {
+  flex-grow: 1;
+  resize: none; /* Disable manual resize */
+  margin-bottom: 16px;
+  overflow-y: auto; /* Enable scrollbar inside textarea for long queries */
+}
+
+/* 1:1 Aspect Ratio Cards on the inner cell containers */
+.subagent-cell .cell,
+.synthesis-cell .cell,
+.evaluation-cell .cell {
+  aspect-ratio: 1 / 1;
+  overflow: hidden; /* Prevent child elements from stretching the height beyond 1:1 */
+}
+
+/* Rowspan 2 column spanning height */
+.final-cell {
+  height: auto;
+}
+.final-cell .cell {
+  height: auto;
+  min-height: 680px; /* Set a robust min-height on desktop to prevent flexbox-clamping bug in table cells, allowing infinite dynamic growth */
+}
+
+/* Custom modern scrollbar */
+.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollable::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background: #cccccc;
+}
+
+/* Specific styling for prompt card textarea */
+#query-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.6;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  resize: vertical;
+  background-color: #f1f3f4; /* Subtle light background instead of border */
+  color: #1c1e21;
+  outline: none;
+  transition: background-color 0.2s ease;
+}
+
+#query-input:focus {
+  background-color: #e8eaed;
+}
+
+#btn-submit {
+  background: linear-gradient(135deg, #1a73e8, #4285f4);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+  transition: all 0.2s ease;
+}
+
+#btn-submit:hover {
+  background: linear-gradient(135deg, #1557b0, #1a73e8);
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.3);
+  transform: translateY(-1px);
+}
+
+#btn-submit:active {
+  transform: translateY(1px);
+}
+
+#btn-submit:disabled {
+  background: #dadce0;
+  color: #80868b;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Badge (extremely simple status labels) */
+.badge {
+  font-weight: 600;
+  padding: 4px 10px;
+  border: none !important; /* No borders */
+  border-radius: 12px;
+  background-color: #f1f3f4;
+  color: #5f6368;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.active {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  animation: pulse-blue 1.5s infinite;
+}
+
+@keyframes pulse-blue {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+.badge.gray {
+  background-color: #f1f3f4;
+  color: #5f6368;
+}
+
+/* Status messages inside topology */
+.status-strip {
+  background-color: #f8f9fa;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  border: none !important; /* No borders */
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #3c4043;
+}
+
+.spinner {
+  color: #1a73e8;
+}
+
+/* SVG Topology Container (Simplified, Borderless) */
+.svg-container {
+  width: 100%;
+  border: none !important; /* Strictly no outline boundary */
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+}
+
+#topology-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Topology Path and Node Styles (Strictly Borderless Nodes) */
+.edge-path {
+  fill: none;
+  stroke: #dadce0;
+  stroke-width: 1.5px;
+  stroke-dasharray: 4,4;
+}
+
+.edge-path.active {
+  stroke: #1a73e8;
+  stroke-width: 2.5px;
+  stroke-dasharray: none;
+}
+
+.edge-path.completed {
+  stroke: #80868b;
+  stroke-width: 1.5px;
+  stroke-dasharray: none;
+}
+
+/* Node circle fills with NO outer stroke/boundary to avoid overlapping */
+.node-circle {
+  fill: #e8eaed; /* Light gray base */
+  stroke: none !important; /* Strictly no outline borders */
+}
+
+.node-group.active .node-circle {
+  fill: #1a73e8; /* High-contrast blue */
+  stroke: none !important;
+}
+
+.node-group.completed .node-circle {
+  fill: #ceead6; /* Light Green */
+  stroke: none !important;
+}
+
+.node-icon {
+  font-family: 'Font Awesome 6 Free', sans-serif;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: central;
+  fill: #5f6368;
+}
+
+.node-group.active .node-icon {
+  fill: #ffffff; /* White icon inside active node */
+}
+
+.node-group.completed .node-icon {
+  fill: #137333; /* Dark green icon */
+}
+
+.node-label {
+  font-weight: 600;
+  text-anchor: middle;
+  fill: #5f6368;
+}
+
+.node-group.active .node-label {
+  fill: #1a73e8;
+}
+
+.node-group.completed .node-label {
+  fill: #137333;
+}
+
+/* Placeholder texts */
+.placeholder-text {
+  font-style: italic;
+  color: #80868b;
+}
+
+/* Markdown and final content rendering */
+.markdown-body {
+  color: #202124;
+  line-height: 1.7;
+}
+
+
+
+.markdown-body strong,
+.markdown-body b {
+  font-weight: 600;
+  color: #1a73e8; /* Accentuate headers/prefixes in blue to look premium */
+}
+
+/* Bullet list styling for itemized URLs and lists */
+.markdown-body ul, 
+.markdown-body ol {
+  list-style: disc !important; /* Enable bullets as requested */
+}
+
+
+
+.markdown-body li {
+  list-style-type: disc !important;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.markdown-body th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Ensure links and raw URLs are never bolded under any circumstances */
+.markdown-body a,
+.markdown-body a *,
+.markdown-body strong a,
+.markdown-body a strong,
+.markdown-body b a,
+.markdown-body a b {
+  font-weight: normal !important;
+  color: #1a73e8;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.markdown-body a:hover,
+.markdown-body a:hover *,
+.markdown-body strong a:hover,
+.markdown-body a strong:hover,
+.markdown-body b a:hover,
+.markdown-body a b:hover {
+  text-decoration: underline !important;
+}
+
+/* Text alignment */
+#final-report-content {
+  max-height: none;
+}
+
+/* Footer styling */
+.minimal-footer {
+  border-top: none !important; /* No line */
+  text-align: center;
+  color: #80868b;
+}

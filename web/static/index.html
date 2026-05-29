@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Cloud QnA</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Marked Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Mermaid.js Diagram Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="/static/style.css"><!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-199SL59JBB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-199SL59JBB');
+</script>
+</head>
+<body>
+
+  <header class="minimal-header">
+    <h1>Google Cloud QnA (L100)</h1>
+    <p><i>본 시스템은 구글 클라우드(Google Cloud) 공식 기술 문서만을 근거로 삼아 질문에 답변합니다.<br />
+      AI가 실시간 생성한 답변이므로, 실제 구축 및 프로덕션 반영 전 공식 명세를 다시 한번 점검하는 것을 권장드립니다.</i></p>
+  </header>
+
+  <main class="dashboard-container">
+    <table class="layout-table">
+      <colgroup>
+        <col style="width: 33.333%;" />
+        <col style="width: 33.333%;" />
+        <col style="width: 33.333%;" />
+      </colgroup>
+      <!-- Row 1: Prompt Input & Topology Map -->
+      <tr>
+        <td width="33%" class="prompt-cell">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-keyboard"></i> 질문 입력</h1>
+              <span class="badge gray">INPUT</span>
+            </div>
+            <div class="cell-body">
+              <textarea id="query-input" placeholder="여기에 질문을 입력하세요..." rows="8">제미나이 호출할 때 API 키로 하는 것과 키 없이 GCP 프로젝트의 Vertex AI = True 해서 쓰는 것과 어떻게 달라?</textarea>
+              <button id="btn-submit">
+                질문 전송 <i class="fa-solid fa-play"></i>
+              </button>
+            </div>
+          </div>
+        </td>
+        <td colspan="2" class="topology-cell">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-network-wired"></i> 지휘 상황</h1>
+              <span class="badge" id="flow-status">IDLE</span>
+            </div>
+            <div class="cell-body">
+              <div class="status-strip">
+                <i class="fa-solid fa-circle-notch fa-spin spinner" id="progress-spinner" style="display: none;"></i>
+                <span id="system-status-msg">질문 입력을 대기하고 있습니다...</span>
+              </div>
+              
+              <!-- SVG Topology Map -->
+              <div class="svg-container">
+                <svg id="topology-svg" viewBox="0 0 1000 480" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+                    </marker>
+                    <marker id="arrow-active" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000" />
+                    </marker>
+                  </defs>
+
+                  <!-- Topology Connections (Edges) -->
+                  <path d="M 500,55 L 500,105" class="edge-path" id="edge-master-router" marker-end="url(#arrow)" />
+                  
+                  <path d="M 500,135 L 80,195" class="edge-path" id="edge-router-APIs_Applications" />
+                  <path d="M 500,135 L 200,195" class="edge-path" id="edge-router-Application_Modernization" />
+                  <path d="M 500,135 L 320,195" class="edge-path" id="edge-router-Artificial_Intelligence" />
+                  <path d="M 500,135 L 440,195" class="edge-path" id="edge-router-Data_Analytics" />
+                  <path d="M 500,135 L 560,195" class="edge-path" id="edge-router-Databases" />
+                  <path d="M 500,135 L 680,195" class="edge-path" id="edge-router-Infrastructure" />
+                  <path d="M 500,135 L 800,195" class="edge-path" id="edge-router-Productivity_Collaboration" />
+                  <path d="M 500,135 L 920,195" class="edge-path" id="edge-router-Security" />
+
+                  <path d="M 80,235 L 500,285" class="edge-path" id="edge-APIs_Applications-synthesizer" />
+                  <path d="M 200,235 L 500,285" class="edge-path" id="edge-Application_Modernization-synthesizer" />
+                  <path d="M 320,235 L 500,285" class="edge-path" id="edge-Artificial_Intelligence-synthesizer" />
+                  <path d="M 440,235 L 500,285" class="edge-path" id="edge-Data_Analytics-synthesizer" />
+                  <path d="M 560,235 L 500,285" class="edge-path" id="edge-Databases-synthesizer" />
+                  <path d="M 680,235 L 500,285" class="edge-path" id="edge-Infrastructure-synthesizer" />
+                  <path d="M 800,235 L 500,285" class="edge-path" id="edge-Productivity_Collaboration-synthesizer" />
+                  <path d="M 920,235 L 500,285" class="edge-path" id="edge-Security-synthesizer" />
+
+                  <path d="M 500,315 L 500,365" class="edge-path" id="edge-synthesizer-evaluator" marker-end="url(#arrow)" />
+                  <path d="M 500,395 L 500,445" class="edge-path" id="edge-evaluator-remediator" marker-end="url(#arrow)" />
+
+                  <!-- Topology Nodes -->
+                  <g class="node-group idle" id="node-master">
+                    <circle cx="500" cy="45" r="24" class="node-circle" />
+                    <text x="500" y="49" class="node-icon"><tspan class="fa">&#xf0e8;</tspan></text>
+                    <text x="500" y="15" class="node-label">Orchestrator</text>
+                  </g>
+
+                  <g class="node-group idle" id="node-router">
+                    <circle cx="500" cy="125" r="20" class="node-circle" />
+                    <text x="500" y="129" class="node-icon"><tspan class="fa">&#xf0ec;</tspan></text>
+                    <text x="500" y="98" class="node-label">Router</text>
+                  </g>
+
+                  <!-- 8 Pillars -->
+                  <g class="node-group idle" id="node-APIs_Applications">
+                    <circle cx="80" cy="215" r="18" class="node-circle" />
+                    <text x="80" y="219" class="node-icon"><tspan class="fa">&#xf121;</tspan></text>
+                    <text x="80" y="174" class="node-label"><tspan x="80" dy="0">APIs and</tspan><tspan x="80" dy="11">Applications</tspan></text>
+                  </g>
+                  <g class="node-group idle" id="node-Application_Modernization">
+                    <circle cx="200" cy="215" r="18" class="node-circle" />
+                    <text x="200" y="219" class="node-icon"><tspan class="fa">&#xf1b3;</tspan></text>
+                    <text x="200" y="174" class="node-label"><tspan x="200" dy="0">Application</tspan><tspan x="200" dy="11">Modernization</tspan></text>
+                  </g>
+                  <g class="node-group idle" id="node-Artificial_Intelligence">
+                    <circle cx="320" cy="215" r="18" class="node-circle" />
+                    <text x="320" y="219" class="node-icon"><tspan class="fa">&#xf522;</tspan></text>
+                    <text x="320" y="174" class="node-label"><tspan x="320" dy="0">Artificial</tspan><tspan x="320" dy="11">Intelligence</tspan></text>
+                  </g>
+                  <g class="node-group idle" id="node-Data_Analytics">
+                    <circle cx="440" cy="215" r="18" class="node-circle" />
+                    <text x="440" y="219" class="node-icon"><tspan class="fa">&#xf080;</tspan></text>
+                    <text x="440" y="174" class="node-label"><tspan x="440" dy="0">Data</tspan><tspan x="440" dy="11">Analytics</tspan></text>
+                  </g>
+                  <g class="node-group idle" id="node-Databases">
+                    <circle cx="560" cy="215" r="18" class="node-circle" />
+                    <text x="560" y="219" class="node-icon"><tspan class="fa">&#xf1c0;</tspan></text>
+                    <text x="560" y="187" class="node-label">Databases</text>
+                  </g>
+                  <g class="node-group idle" id="node-Infrastructure">
+                    <circle cx="680" cy="215" r="18" class="node-circle" />
+                    <text x="680" y="219" class="node-icon"><tspan class="fa">&#xf233;</tspan></text>
+                    <text x="680" y="187" class="node-label">Infrastructure</text>
+                  </g>
+                  <g class="node-group idle" id="node-Productivity_Collaboration">
+                    <circle cx="800" cy="215" r="18" class="node-circle" />
+                    <text x="800" y="219" class="node-icon"><tspan class="fa">&#xf0c0;</tspan></text>
+                    <text x="800" y="174" class="node-label"><tspan x="800" dy="0">Productivity and</tspan><tspan x="800" dy="11">Collaboration</tspan></text>
+                  </g>
+                  <g class="node-group idle" id="node-Security">
+                    <circle cx="920" cy="215" r="18" class="node-circle" />
+                    <text x="920" y="219" class="node-icon"><tspan class="fa">&#xf3ed;</tspan></text>
+                    <text x="920" y="187" class="node-label">Security</text>
+                  </g>
+
+                  <!-- Synthesizer -->
+                  <g class="node-group idle" id="node-synthesizer">
+                    <circle cx="500" cy="300" r="20" class="node-circle" />
+                    <text x="500" y="304" class="node-icon"><tspan class="fa">&#xf0c9;</tspan></text>
+                    <text x="500" y="333" class="node-label">Synthesizer</text>
+                  </g>
+
+                  <!-- Evaluator -->
+                  <g class="node-group idle" id="node-evaluator">
+                    <circle cx="500" cy="380" r="18" class="node-circle" />
+                    <text x="500" y="384" class="node-icon"><tspan class="fa">&#xf05a;</tspan></text>
+                    <text x="500" y="411" class="node-label">Evaluator</text>
+                  </g>
+
+                  <!-- Remediator -->
+                  <g class="node-group idle" id="node-remediator">
+                    <circle cx="500" cy="455" r="18" class="node-circle" />
+                    <text x="500" y="459" class="node-icon"><tspan class="fa">&#xf0e2;</tspan></text>
+                    <text x="500" y="443" class="node-label">Remediator</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Row 2: Parallel Sub-Agents Live Board -->
+      <tr>
+        <td class="subagent-cell" id="subagent-slot-1">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-gears"></i> 전문가 #1 답변</h1>
+              <span class="badge" id="subagent-badge-1">WAITING</span>
+            </div>
+            <div class="cell-body scrollable markdown-body" id="subagent-content-1">
+              <p class="placeholder-text">대기 중...</p>
+            </div>
+          </div>
+        </td>
+        <td class="subagent-cell" id="subagent-slot-2">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-gears"></i> 전문가 #2 답변</h1>
+              <span class="badge" id="subagent-badge-2">WAITING</span>
+            </div>
+            <div class="cell-body scrollable markdown-body" id="subagent-content-2">
+              <p class="placeholder-text">대기 중...</p>
+            </div>
+          </div>
+        </td>
+        <td class="subagent-cell" id="subagent-slot-3">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-gears"></i> 전문가 #3 답변</h1>
+              <span class="badge" id="subagent-badge-3">WAITING</span>
+            </div>
+            <div class="cell-body scrollable markdown-body" id="subagent-content-3">
+              <p class="placeholder-text">대기 중...</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Row 3: Synthesized Draft & Final Answer (starts spanning) -->
+      <tr>
+        <td class="synthesis-cell" id="synthesis-slot">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-file-invoice"></i> 답변 합성</h1>
+              <span class="badge" id="synthesis-streaming-badge" style="display: none;">STREAMING</span>
+            </div>
+            <div class="cell-body scrollable markdown-body" id="synthesis-text">
+              <p class="placeholder-text">대기 중...</p>
+            </div>
+          </div>
+        </td>
+        <td rowspan="2" colspan="2" class="final-cell" id="final-answer-slot">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-check-double"></i> 최종 답변</h1>
+              <span class="badge" id="final-status">WAITING</span>
+            </div>
+            <div class="cell-body markdown-body" id="final-report-content">
+              <p class="placeholder-text">대기 중...</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Row 4: Fact check (under Synthesis Draft) -->
+      <tr>
+        <td class="evaluation-cell" id="evaluation-slot">
+          <div class="cell">
+            <div class="cell-header">
+              <h1 class="cell-title"><i class="fa-solid fa-clipboard-check"></i> 팩트 체크</h1>
+              <span class="badge" id="evaluation-streaming-badge" style="display: none;">STREAMING</span>
+            </div>
+            <div class="cell-body scrollable markdown-body" id="evaluation-text">
+              <p class="placeholder-text">대기 중...</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </main>
+
+  <footer class="minimal-footer">
+    <p>--- Last built on 2026-05-29 by Agy-CLI ---</p>
+  </footer>
+
+  <!-- Custom Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>

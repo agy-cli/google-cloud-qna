@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+httpx
+pydantic
+google-genai
+pyyaml
+rich
+graphviz
+google-cloud-storage
