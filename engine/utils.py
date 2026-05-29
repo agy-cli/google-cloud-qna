@@ -294,7 +294,9 @@ def generate_and_upload_diagram(markdown_text: str) -> str:
     # 1. UUID-based unique filename (removing hyphens as requested)
     uuid_str = str(uuid.uuid4()).replace("-", "")
     object_name = f"google-cloud-qna/architecture_{uuid_str}.png"
-    bucket_name = os.environ.get("GCS_BUCKET") or "jiangjun0"
+    bucket_name = os.environ.get("GCS_BUCKET")
+    if not bucket_name:
+      raise RuntimeError("Environment variable 'GCS_BUCKET' is required but not set.")
     
     # 2. Render DOT to a temporary file
     with tempfile.TemporaryDirectory() as tmpdir:

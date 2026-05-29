@@ -52,9 +52,9 @@ google-cloud-qna/
 
 `~/.env` 파일 예시:
 ```env
-GCP_PROJECT="jiangjun0"
+GCP_PROJECT="your-gcp-project-id"
 GCP_REGION="us-central1"
-GCS_BUCKET="jiangjun0"
+GCS_BUCKET="your-gcs-bucket-name"
 MODEL_AGENT="gemini-3.5-flash"
 MODEL_LOCATION="global"
 MODEL_SUBAGENTS="gemini-3.5-flash"

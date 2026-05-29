@@ -20,8 +20,27 @@ elif [ -f ~/.env ]; then
   export $(grep -v '^#' ~/.env | xargs)
 fi
 
-PROJECT_ID="${GCP_PROJECT:-jiangjun0}"
-REGION="${GCP_REGION:-us-central1}"
+# 필수 환경 변수 검증 (개인 기본값 노출 방지)
+if [ -z "${GCP_PROJECT}" ]; then
+  echo "오류: GCP_PROJECT 환경 변수가 설정되어 있지 않습니다." >&2
+  echo ".env 파일이나 환경 변수를 확인해 주세요." >&2
+  exit 1
+fi
+
+if [ -z "${GCP_REGION}" ]; then
+  echo "오류: GCP_REGION 환경 변수가 설정되어 있지 않습니다." >&2
+  echo ".env 파일이나 환경 변수를 확인해 주세요." >&2
+  exit 1
+fi
+
+if [ -z "${GCS_BUCKET}" ]; then
+  echo "오류: GCS_BUCKET 환경 변수가 설정되어 있지 않습니다." >&2
+  echo ".env 파일이나 환경 변수를 확인해 주세요." >&2
+  exit 1
+fi
+
+PROJECT_ID="${GCP_PROJECT}"
+REGION="${GCP_REGION}"
 MODEL_LOCATION_VAL="${MODEL_LOCATION:-global}"
 REPO_NAME="gcp-advisor"
 

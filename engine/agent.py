@@ -39,11 +39,13 @@ def load_env_file():
 
 load_env_file()
 
-# Ensure default Google Cloud project configuration is set if missing from environment or .env
-if "GCP_PROJECT" not in os.environ:
-  os.environ["GCP_PROJECT"] = "jiangjun0"
-if "GCP_REGION" not in os.environ:
-  os.environ["GCP_REGION"] = "us-central1"
+# Ensure required Google Cloud configuration is present without leaking private default fallbacks
+if not os.environ.get("GCP_PROJECT"):
+  raise RuntimeError("Environment variable 'GCP_PROJECT' is required but not set. Please define it in your environment or .env file.")
+if not os.environ.get("GCP_REGION"):
+  raise RuntimeError("Environment variable 'GCP_REGION' is required but not set. Please define it in your environment or .env file.")
+if not os.environ.get("GCS_BUCKET"):
+  raise RuntimeError("Environment variable 'GCS_BUCKET' is required but not set. Please define it in your environment or .env file.")
 if "MODEL_LOCATION" not in os.environ:
   os.environ["MODEL_LOCATION"] = "global"
 
@@ -313,7 +315,9 @@ def get_genai_client():
   """Google Gen AI 클라이언트를 지연 초기화(Lazy Initialization)하여 싱글턴 인스턴스로 반환한다."""
   global _client_instance
   if _client_instance is None:
-    proj_id = os.environ.get("GCP_PROJECT") or "jiangjun0"
+    proj_id = os.environ.get("GCP_PROJECT")
+    if not proj_id:
+      raise RuntimeError("Environment variable 'GCP_PROJECT' is required but not set.")
     loc = os.environ.get("MODEL_LOCATION") or "global"
     _client_instance = genai.Client(vertexai=True, project=proj_id, location=loc)
   return _client_instance
