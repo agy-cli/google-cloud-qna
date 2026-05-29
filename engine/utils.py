@@ -28,6 +28,31 @@ if not _has_dot_binary:
   logger.warning("[Warning] 'dot' executable not found in PATH. Graphviz compilation will degrade to error box representation.")
 
 
+def load_env_file():
+  """최상위 google-cloud-qna 루트 및 홈 디렉터리에 있는 .env 파일을 찾아 os.environ에 안전하게 수동 적재한다."""
+  current_dir = os.path.dirname(os.path.abspath(__file__))
+  parent_dir = os.path.dirname(current_dir)
+  
+  env_paths = [
+    os.path.expanduser("~/.env"),
+    os.path.join(parent_dir, ".env"),
+    os.path.join(current_dir, ".env")
+  ]
+  
+  for env_path in env_paths:
+    if os.path.exists(env_path):
+      with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+          line = line.strip()
+          if not line or line.startswith("#"):
+            continue
+          if "=" in line:
+            key, val = line.split("=", 1)
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            os.environ[key] = val
+
+
 def resolve_redirect_url(url: str) -> str:
   """Resolves redirect URLs, particularly Google/Vertex search redirect URLs and HTTP redirects."""
   url = url.strip()
@@ -357,3 +382,42 @@ def generate_and_upload_diagram(markdown_text: str) -> str:
       return text_before + "\n" + error_msg + "\n" + text_after
     else:
       return text_before + "\n" + error_msg
+
+
+def normalize_markdown_indentation(text: str) -> str:
+  """최종 기술 자문 보고서 마크다운 문서를 미학적으로 가공하고 줄바꿈 정렬을 최종 수행한다."""
+  if not text:
+    return text
+  lines = text.split("\n")
+  processed_lines = []
+  for line in lines:
+    match = re.match(r"^(\s+)([-*+]\s|\d+\.\s)(.*)", line)
+    if match:
+      indent, bullet, content = match.groups()
+      new_indent_len = max(2, (len(indent) // 2) * 2) if len(indent) >= 4 else len(indent)
+      processed_lines.append(" " * new_indent_len + bullet + content)
+    else:
+      processed_lines.append(line)
+  return "\n".join(processed_lines)
+
+
+def format_url_validation_report(url_validation_results: dict) -> str:
+  """물리적 URL 연결 유효성 검증 결과를 정돈된 마크다운 요약 본문으로 변환한다."""
+  broken_urls_report = []
+  valid_urls_report = []
+  for url, res in url_validation_results.items():
+    if not res["is_valid"]:
+      broken_urls_report.append(f"- {url}: {res['error_message']} (지적 대상 - 최종 권고안에서 제거 또는 대체 필수)")
+    else:
+      valid_urls_report.append(f"- {url}: 존재함 ({res['status_code']} OK)")
+      
+  url_check_summary = "[물리적 URL 검증 결과 (HTTP Status Check)]\n"
+  if broken_urls_report:
+    url_check_summary += "!!! 발견된 오류/깨진 링크 (404 Not Found 또는 통신 불가) !!!\n" + "\n".join(broken_urls_report) + "\n"
+  else:
+    url_check_summary += "모든 URL의 물리적 연결이 정상인 것으로 확인되었습니다.\n"
+    
+  if valid_urls_report:
+    url_check_summary += "\n[정상 링크 목록]\n" + "\n".join(valid_urls_report) + "\n"
+    
+  return url_check_summary

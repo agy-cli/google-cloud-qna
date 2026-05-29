@@ -10,26 +10,7 @@ import sys
 # 상위 디렉터리를 PYTHONPATH에 추가하여 패키지 구조에서 engine을 원활히 가져오도록 지원한다.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def load_env_file():
-  """최상위 google-cloud-qna 루트에 있는 .env 파일을 찾아 os.environ에 안전하게 수동 적재한다."""
-  current_dir = os.path.dirname(os.path.abspath(__file__))
-  parent_dir = os.path.dirname(current_dir)
-  env_path = os.path.join(parent_dir, ".env")
-  if not os.path.exists(env_path):
-    env_path = os.path.join(current_dir, ".env")
-    
-  if os.path.exists(env_path):
-    with open(env_path, "r", encoding="utf-8") as f:
-      for line in f:
-        line = line.strip()
-        if not line or line.startswith("#"):
-          continue
-        if "=" in line:
-          key, val = line.split("=", 1)
-          key = key.strip()
-          val = val.strip().strip('"').strip("'")
-          os.environ[key] = val
-
+from engine.utils import load_env_file
 load_env_file()
 
 import json
